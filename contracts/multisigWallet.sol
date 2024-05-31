@@ -55,7 +55,7 @@ contract MultiSigWallet is ReentrancyGuard {
 
     address[] public owners;
     mapping(address => bool) public isOwner;
-    uint256 public numConfirmationsRequired;
+    uint256 public numConfirmationsRequired; // !!!W add a function to change the numConfirmationsRequired if ALL multisig owners confirm
 
     struct Transaction {
         address to;
@@ -191,7 +191,12 @@ contract MultiSigWallet is ReentrancyGuard {
      */
     function revokeConfirmation(
         uint256 _txIndex
-    ) public onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) {
+    )
+        public
+        onlyMultiSigOwner
+        txExists(_txIndex)
+        notExecuted(_txIndex)
+    /* !!!W shouldnt i also add the isconfirmed modifier? */ {
         Transaction storage transaction = transactions[_txIndex];
         require(isConfirmed[_txIndex][msg.sender], "Transaction not confirmed");
 
@@ -224,6 +229,8 @@ contract MultiSigWallet is ReentrancyGuard {
     {
         require(_newOwner != address(0), "Invalid owner");
         require(!isOwner[_newOwner], "Owner already exists");
+
+        // clearPendingTransactions(); // !!!W has to be here, right?
 
         isOwner[_newOwner] = true;
         owners.push(_newOwner);
