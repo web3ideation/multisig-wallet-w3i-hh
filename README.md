@@ -1,3 +1,15 @@
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Third-Party Libraries
+
+This project includes code from the following open-source project(s):
+
+- [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) - Licensed under the MIT License.
+
+
+
 next steps:
 24.05.24 Gnosis checken ob ich darauf aufbauen kann. Den contract verstehen und schauen was ich anpassen muss für uns. Checken ob ich ihn verwenden darf und ob ich licenses/mentions machen muss.
 
@@ -329,7 +341,7 @@ By doing this, you maintain a zero-trust environment where changes to the owner 
 
  add a function where the multisigOwner who submitted a transaction is able to cancel/delete it anytime before it has been executed.
 
- have two different numconfirmationrequired for normal transactions and adding/deleting users (does that make sense?)
+ have two different numconfirmationrequired for normal transactions and adding/deleting users (does that make sense?) - leichte entscheidungen 50+1 und schwere 2/3 mehrheit
 
 
 

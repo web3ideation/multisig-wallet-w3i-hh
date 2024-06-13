@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: MIT
+// This file is part of the MultiSigWallet project.
+// Portions of this code are derived from the OpenZeppelin Contracts library.
+// OpenZeppelin Contracts are licensed under the MIT License.
+// See the LICENSE file for more details.
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
