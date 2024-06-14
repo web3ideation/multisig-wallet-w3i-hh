@@ -57,6 +57,9 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @param owner The address of the owner removed.
     event OwnerRemoved(address indexed owner);
 
+    /// @notice Emitted when all pending transactions have been cleared.
+    event PendingTransactionsCleared();
+
     address[] public owners;
     mapping(address => bool) public isOwner;
     uint256 public numConfirmationsRequired; // !!!W add a function to change the numConfirmationsRequired if ALL multisig owners confirm
@@ -195,12 +198,7 @@ contract MultiSigWallet is ReentrancyGuard {
      */
     function revokeConfirmation(
         uint256 _txIndex
-    )
-        public
-        onlyMultiSigOwner
-        txExists(_txIndex)
-        notExecuted(_txIndex)
-    /* !!!W shouldnt i also add the isconfirmed modifier? */ {
+    ) public onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) {
         Transaction storage transaction = transactions[_txIndex];
         require(isConfirmed[_txIndex][msg.sender], "Transaction not confirmed");
 
@@ -234,7 +232,8 @@ contract MultiSigWallet is ReentrancyGuard {
         require(_newOwner != address(0), "Invalid owner");
         require(!isOwner[_newOwner], "Owner already exists");
 
-        // clearPendingTransactions(); // !!!W has to be here, right?
+        // Clear pending transactions before adding the new owner
+        clearPendingTransactions();
 
         isOwner[_newOwner] = true;
         owners.push(_newOwner);
@@ -264,6 +263,9 @@ contract MultiSigWallet is ReentrancyGuard {
         notExecuted(transactions.length - 1)
     {
         require(isOwner[_owner], "Not an owner");
+
+        // Clear pending transactions before adding the new owner
+        clearPendingTransactions();
 
         isOwner[_owner] = false;
         for (uint256 i = 0; i < owners.length; i++) {
@@ -310,5 +312,10 @@ contract MultiSigWallet is ReentrancyGuard {
             _tokenId
         );
         submitTransaction(_tokenAddress, 0, data);
+    }
+
+    function clearPendingTransactions() internal {
+        delete transactions;
+        emit PendingTransactionsCleared();
     }
 }

@@ -494,16 +494,16 @@
     "repository": "https://github.com/paulmillr/noble-curves",
     "publisher": "Paul Miller",
     "url": "https://paulmillr.com",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/@noble/curves",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/@noble/curves/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/@noble/curves",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/@noble/curves/LICENSE"
   },
   "@noble/hashes@1.2.0": {
     "licenses": "MIT",
     "repository": "https://github.com/paulmillr/noble-hashes",
     "publisher": "Paul Miller",
     "url": "https://paulmillr.com",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@scure/bip32/node_modules/@noble/hashes",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@scure/bip32/node_modules/@noble/hashes/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@scure/bip39/node_modules/@noble/hashes",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@scure/bip39/node_modules/@noble/hashes/LICENSE"
   },
   "@noble/hashes@1.3.2": {
     "licenses": "MIT",
@@ -760,8 +760,8 @@
     "repository": "https://github.com/paulmillr/scure-bip32",
     "publisher": "Paul Miller",
     "url": "https://paulmillr.com",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/@scure/bip32",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/@scure/bip32/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/@scure/bip32",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/@scure/bip32/LICENSE"
   },
   "@scure/bip39@1.1.1": {
     "licenses": "MIT",
@@ -784,8 +784,8 @@
     "repository": "https://github.com/paulmillr/scure-bip39",
     "publisher": "Paul Miller",
     "url": "https://paulmillr.com",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/@scure/bip39",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/@scure/bip39/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/@scure/bip39",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/@scure/bip39/LICENSE"
   },
   "@sentry/core@5.30.0": {
     "licenses": "BSD-3-Clause",
@@ -933,8 +933,8 @@
   "@types/lru-cache@5.1.1": {
     "licenses": "MIT",
     "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@types/lru-cache",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@types/lru-cache/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ganache/node_modules/@types/lru-cache",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ganache/node_modules/@types/lru-cache/LICENSE"
   },
   "@types/minimatch@5.1.2": {
     "licenses": "MIT",
@@ -1005,8 +1005,8 @@
   "@types/seedrandom@3.0.1": {
     "licenses": "MIT",
     "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@types/seedrandom",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@types/seedrandom/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ganache/node_modules/@types/seedrandom",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ganache/node_modules/@types/seedrandom/LICENSE"
   },
   "abbrev@1.0.9": {
     "licenses": "ISC",
@@ -1416,16 +1416,16 @@
     "repository": "https://github.com/indutny/bn.js",
     "publisher": "Fedor Indutny",
     "email": "fedor@indutny.com",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/number-to-bn/node_modules/bn.js",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/number-to-bn/node_modules/bn.js/README.md"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ethjs-unit/node_modules/bn.js",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ethjs-unit/node_modules/bn.js/README.md"
   },
   "bn.js@4.12.0": {
     "licenses": "MIT",
     "repository": "https://github.com/indutny/bn.js",
     "publisher": "Fedor Indutny",
     "email": "fedor@indutny.com",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/bn.js",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/bn.js/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethersproject/signing-key/node_modules/elliptic/node_modules/bn.js",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethersproject/signing-key/node_modules/elliptic/node_modules/bn.js/LICENSE"
   },
   "bn.js@5.2.1": {
     "licenses": "MIT",
@@ -2268,8 +2268,8 @@
   "ethereum-cryptography@2.1.3": {
     "licenses": "MIT",
     "repository": "https://github.com/ethereum/js-ethereum-cryptography",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/ethereum-cryptography",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/hardhat-gas-reporter/node_modules/ethereum-cryptography/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/ethereum-cryptography",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ethereumjs/util/node_modules/ethereum-cryptography/LICENSE"
   },
   "ethereum-waffle@4.0.10": {
     "licenses": "MIT",
@@ -3100,8 +3100,8 @@
     "publisher": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
     "url": "https://feross.org",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/is-buffer",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/is-buffer/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ganache/node_modules/is-buffer",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/ganache/node_modules/is-buffer/LICENSE"
   },
   "is-core-module@2.13.1": {
     "licenses": "MIT",
@@ -3889,8 +3889,8 @@
     "repository": "https://github.com/prebuild/node-gyp-build",
     "publisher": "Mathias Buus",
     "url": "@mafintosh",
-    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/node-gyp-build",
-    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/node-gyp-build/LICENSE"
+    "path": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ganache/utils/node_modules/keccak/node_modules/node-gyp-build",
+    "licenseFile": "/home/wolfgang/w3i/multisig-wallet-w3i/node_modules/@ganache/utils/node_modules/keccak/node_modules/node-gyp-build/LICENSE"
   },
   "nofilter@3.1.0": {
     "licenses": "MIT",
