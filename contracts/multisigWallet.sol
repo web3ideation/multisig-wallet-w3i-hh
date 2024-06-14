@@ -16,9 +16,9 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 contract MultiSigWallet is ReentrancyGuard {
     /// @notice Emitted when a deposit is made.
     /// @param sender The address that sent the deposit.
-    /// @param amount The amount of the deposit.
+    /// @param amountOrTokenId The amount of the deposit.
     /// @param balance The new balance of the wallet.
-    event Deposit(address indexed sender, uint256 amount, uint256 balance);
+    event Deposit(address indexed sender, uint256 amountOrTokenId, uint256 balance);
 
     /// @notice Emitted when a transaction is submitted.
     /// @param owner The address of the owner who submitted the transaction.
@@ -31,7 +31,10 @@ contract MultiSigWallet is ReentrancyGuard {
         uint256 indexed txIndex,
         address indexed to,
         uint256 value,
-        bytes data
+        bytes data,
+        address tokenAddress,
+        uint256 amountOrTokenId,
+        bool isERC721
     );
 
     /// @notice Emitted when a transaction is confirmed.
@@ -47,7 +50,16 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @notice Emitted when a transaction is executed.
     /// @param owner The address of the owner who executed the transaction.
     /// @param txIndex The index of the executed transaction.
-    event ExecuteTransaction(address indexed owner, uint256 indexed txIndex);
+    event ExecuteTransaction(
+        address indexed owner,
+        uint256 indexed txIndex,
+        address indexed to,
+        uint256 value,
+        bytes data,
+        address tokenAddress,
+        uint256 amountOrTokenId,
+        bool isERC721
+    );
 
     /// @notice Emitted when an owner is added.
     /// @param owner The address of the owner added.
@@ -149,7 +161,21 @@ contract MultiSigWallet is ReentrancyGuard {
             })
         );
 
-        emit SubmitTransaction(msg.sender, txIndex, _to, _value, _data);
+        // Decode the data to extract the token address and amount / tokenId
+        (address tokenAddress, uint256 amountOrTokenId, bool isERC721) = decodeTransactionData(
+            _data
+        );
+
+        emit SubmitTransaction(
+            msg.sender,
+            txIndex,
+            _to,
+            _value,
+            _data,
+            tokenAddress,
+            amountOrTokenId,
+            isERC721
+        );
     }
 
     /**
@@ -189,7 +215,21 @@ contract MultiSigWallet is ReentrancyGuard {
         (bool success, ) = transaction.to.call{value: transaction.value}(transaction.data);
         require(success, "Transaction failed");
 
-        emit ExecuteTransaction(msg.sender, _txIndex);
+        // Decode the data to extract the token address and amount / tokenId
+        (address tokenAddress, uint256 amountOrTokenId, bool isERC721) = decodeTransactionData(
+            transaction.data
+        );
+
+        emit ExecuteTransaction(
+            msg.sender,
+            _txIndex,
+            transaction.to,
+            transaction.value,
+            transaction.data,
+            tokenAddress,
+            amountOrTokenId,
+            isERC721
+        );
     }
 
     /**
@@ -283,14 +323,18 @@ contract MultiSigWallet is ReentrancyGuard {
      * @dev Submits a transaction to transfer ERC20 tokens.
      * @param _tokenAddress The address of the ERC20 token contract.
      * @param _to The address to send the tokens to.
-     * @param _amount The amount of tokens to send.
+     * @param _amountOrTokenId The amount of tokens to send.
      */
     function transferERC20(
         address _tokenAddress,
         address _to,
-        uint256 _amount
+        uint256 _amountOrTokenId
     ) public onlyMultiSigOwner {
-        bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", _to, _amount);
+        bytes memory data = abi.encodeWithSignature(
+            "transfer(address,uint256)",
+            _to,
+            _amountOrTokenId
+        );
         submitTransaction(_tokenAddress, 0, data);
     }
 
@@ -317,5 +361,41 @@ contract MultiSigWallet is ReentrancyGuard {
     function clearPendingTransactions() internal {
         delete transactions;
         emit PendingTransactionsCleared();
+    }
+
+    function decodeTransactionData(
+        bytes memory data
+    ) internal pure returns (address tokenAddress, uint256 amountOrTokenId, bool isERC721) {
+        bytes4 erc20Selector = bytes4(keccak256("transfer(address,uint256)"));
+        bytes4 erc721Selector = bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
+
+        bytes4 selector;
+        assembly {
+            selector := mload(add(data, 32))
+        }
+
+        if (selector == erc20Selector) {
+            require(data.length == 68, "Invalid data length for ERC20 transfer");
+            address _to;
+            uint256 _amountOrTokenId;
+            assembly {
+                _to := mload(add(data, 36))
+                _amountOrTokenId := mload(add(data, 68))
+            }
+            return (_to, _amountOrTokenId, false);
+        } else if (selector == erc721Selector) {
+            require(data.length == 100, "Invalid data length for ERC721 transfer");
+            address _from;
+            address _to;
+            uint256 tokenId;
+            assembly {
+                _from := mload(add(data, 36))
+                _to := mload(add(data, 68))
+                tokenId := mload(add(data, 100))
+            }
+            return (_to, tokenId, true);
+        } else {
+            revert("Unknown transaction data");
+        }
     }
 }
