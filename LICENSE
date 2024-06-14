@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2023 Web3Ideation.com
+Copyright (c) 2023 web3ideation.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,21 @@ SOFTWARE.
 
 ---
 
-This project includes code from the following open-source project(s):
+This project includes code from the following open-source projects:
 
--   OpenZeppelin Contracts
-    License: MIT
-    Repository: https://github.com/OpenZeppelin/openzeppelin-contracts
+-   @nomiclabs/hardhat-ethers (MIT)
+-   @nomiclabs/hardhat-etherscan (MIT)
+-   @nomiclabs/hardhat-waffle (MIT)
+-   chai (MIT)
+-   ethereum-waffle (MIT)
+-   ethers (MIT)
+-   hardhat (MIT)
+-   hardhat-contract-sizer (MIT)
+-   hardhat-deploy (MIT)
+-   hardhat-gas-reporter (MIT)
+-   prettier (MIT)
+-   solidity-coverage (MIT)
+-   @openzeppelin/contracts (MIT)
+-   dotenv (BSD-2-Clause)
+-   prettier-plugin-solidity (MIT)
+-   solhint (MIT)
