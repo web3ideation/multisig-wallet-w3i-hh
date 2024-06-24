@@ -118,6 +118,7 @@ contract MultiSigWallet is ReentrancyGuard {
         uint256 _numNormalDecisionConfirmations
     ) {
         require(_owners.length > 0, "Owners required");
+
         require(
             _numImportantDecisionConfirmations > 0 &&
                 _numImportantDecisionConfirmations <= _owners.length,
