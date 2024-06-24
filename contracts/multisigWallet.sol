@@ -74,7 +74,8 @@ contract MultiSigWallet is ReentrancyGuard {
 
     address[] public owners;
     mapping(address => bool) public isOwner;
-    uint256 public numConfirmationsRequired; // !!!W add a function to change the numConfirmationsRequired if ALL multisig owners confirm
+    uint256 public numImportantDecisionConfirmations;
+    uint256 public numNormalDecisionConfirmations;
 
     struct Transaction {
         address to;
@@ -110,12 +111,22 @@ contract MultiSigWallet is ReentrancyGuard {
     /**
      * @dev Constructor to initialize the contract.
      * @param _owners The addresses of the owners.
-     * @param _numConfirmationsRequired The number of confirmations required for a transaction.
      */
-    constructor(address[] memory _owners, uint256 _numConfirmationsRequired) {
+    constructor(
+        address[] memory _owners,
+        uint256 _numImportantDecisionConfirmations,
+        uint256 _numNormalDecisionConfirmations
+    ) {
         require(_owners.length > 0, "Owners required");
         require(
-            _numConfirmationsRequired > 0 && _numConfirmationsRequired <= _owners.length,
+            _numImportantDecisionConfirmations > 0 &&
+                _numImportantDecisionConfirmations <= _owners.length,
+            "Invalid number of required confirmations"
+        );
+
+        require(
+            _numNormalDecisionConfirmations > 0 &&
+                _numNormalDecisionConfirmations <= _owners.length,
             "Invalid number of required confirmations"
         );
 
@@ -128,7 +139,8 @@ contract MultiSigWallet is ReentrancyGuard {
             owners.push(owner);
         }
 
-        numConfirmationsRequired = _numConfirmationsRequired;
+        numImportantDecisionConfirmations = _numImportantDecisionConfirmations;
+        numNormalDecisionConfirmations = _numNormalDecisionConfirmations;
     }
 
     /**
@@ -191,6 +203,11 @@ contract MultiSigWallet is ReentrancyGuard {
 
         emit ConfirmTransaction(msg.sender, _txIndex);
 
+        uint256 numConfirmationsRequired = isImportantTransaction(transaction.data)
+            ? numImportantDecisionConfirmations
+            : numNormalDecisionConfirmations;
+
+        // hier muss die logik rein, dass wenn die Transaction owners hinzufügt oder löscht - die andere numConfrimations genommen wird.
         if (transaction.numConfirmations >= numConfirmationsRequired) {
             executeTransaction(_txIndex);
         }
@@ -204,6 +221,10 @@ contract MultiSigWallet is ReentrancyGuard {
         uint256 _txIndex
     ) internal onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) nonReentrant {
         Transaction storage transaction = transactions[_txIndex];
+
+        uint256 numConfirmationsRequired = isImportantTransaction(transaction.data)
+            ? numImportantDecisionConfirmations
+            : numNormalDecisionConfirmations;
 
         require(
             transaction.numConfirmations >= numConfirmationsRequired,
@@ -397,5 +418,17 @@ contract MultiSigWallet is ReentrancyGuard {
         } else {
             revert("Unknown transaction data");
         }
+    }
+
+    function isImportantTransaction(bytes memory _data) internal pure returns (bool) {
+        bytes4 addOwnerSelector = bytes4(keccak256("addOwnerInternal(address)"));
+        bytes4 removeOwnerSelector = bytes4(keccak256("removeOwnerInternal(address)"));
+
+        bytes4 selector;
+        assembly {
+            selector := mload(add(_data, 32))
+        }
+
+        return (selector == addOwnerSelector || selector == removeOwnerSelector);
     }
 }
