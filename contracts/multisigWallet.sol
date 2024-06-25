@@ -112,24 +112,8 @@ contract MultiSigWallet is ReentrancyGuard {
      * @dev Constructor to initialize the contract.
      * @param _owners The addresses of the owners.
      */
-    constructor(
-        address[] memory _owners,
-        uint256 _numImportantDecisionConfirmations,
-        uint256 _numNormalDecisionConfirmations
-    ) {
+    constructor(address[] memory _owners) {
         require(_owners.length > 0, "Owners required");
-
-        require(
-            _numImportantDecisionConfirmations > 0 &&
-                _numImportantDecisionConfirmations <= _owners.length,
-            "Invalid number of required confirmations"
-        );
-
-        require(
-            _numNormalDecisionConfirmations > 0 &&
-                _numNormalDecisionConfirmations <= _owners.length,
-            "Invalid number of required confirmations"
-        );
 
         for (uint256 i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
@@ -140,8 +124,7 @@ contract MultiSigWallet is ReentrancyGuard {
             owners.push(owner);
         }
 
-        numImportantDecisionConfirmations = _numImportantDecisionConfirmations;
-        numNormalDecisionConfirmations = _numNormalDecisionConfirmations;
+        updateConfirmationsRequired();
     }
 
     /**
@@ -300,6 +283,8 @@ contract MultiSigWallet is ReentrancyGuard {
         isOwner[_newOwner] = true;
         owners.push(_newOwner);
 
+        updateConfirmationsRequired();
+
         emit OwnerAdded(_newOwner);
     }
 
@@ -337,6 +322,8 @@ contract MultiSigWallet is ReentrancyGuard {
                 break;
             }
         }
+
+        updateConfirmationsRequired();
 
         emit OwnerRemoved(_owner);
     }
@@ -431,5 +418,19 @@ contract MultiSigWallet is ReentrancyGuard {
         }
 
         return (selector == addOwnerSelector || selector == removeOwnerSelector);
+    }
+
+    function updateConfirmationsRequired() internal {
+        uint256 ownerCount = owners.length;
+        numNormalDecisionConfirmations = (ownerCount / 2) + (ownerCount % 2); // !!! test these
+        numImportantDecisionConfirmations = ((2 * ownerCount) / 3) + (ownerCount % 3 != 0 ? 1 : 0); // !!! test these
+        require(
+            ownerCount >= numNormalDecisionConfirmations,
+            "numNormalDecisionConfirmations higher then owners"
+        );
+        require(
+            ownerCount >= numImportantDecisionConfirmations,
+            "numImportantDecisionConfirmations higher then owners"
+        );
     }
 }
