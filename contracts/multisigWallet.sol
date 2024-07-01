@@ -21,20 +21,20 @@ contract MultiSigWallet is ReentrancyGuard {
     event Deposit(address indexed sender, uint256 amountOrTokenId, uint256 balance);
 
     /// @notice Emitted when a transaction is submitted.
-    /// @param owner The address of the owner who submitted the transaction.
     /// @param txIndex The index of the submitted transaction.
     /// @param to The address to which the transaction is sent.
     /// @param value The amount of Ether sent in the transaction.
     /// @param data The data sent with the transaction.
+    /// @param owner The address of the owner who submitted the transaction.
     event SubmitTransaction(
-        address indexed owner,
         uint256 indexed txIndex,
         address indexed to,
         uint256 value,
         bytes data,
         address tokenAddress,
         uint256 amountOrTokenId,
-        bool isERC721
+        bool isERC721,
+        address indexed owner
     );
 
     /// @notice Emitted when a transaction is confirmed.
@@ -72,6 +72,8 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @notice Emitted when all pending transactions have been cleared.
     event PendingTransactionsCleared();
 
+    event MyPendingTransactionCleared(uint indexed txIndex);
+
     address[] public owners;
     mapping(address => bool) public isOwner;
     uint256 public numImportantDecisionConfirmations;
@@ -83,6 +85,7 @@ contract MultiSigWallet is ReentrancyGuard {
         bytes data;
         bool executed;
         uint256 numConfirmations;
+        address owner;
     }
 
     mapping(uint256 => mapping(address => bool)) public isConfirmed;
@@ -153,7 +156,8 @@ contract MultiSigWallet is ReentrancyGuard {
                 value: _value,
                 data: _data,
                 executed: false,
-                numConfirmations: 0
+                numConfirmations: 0,
+                owner: msg.sender //!!! is this fine or do i have to assign the msg.sender to a variable before the transaction.push?
             })
         );
 
@@ -163,14 +167,14 @@ contract MultiSigWallet is ReentrancyGuard {
         );
 
         emit SubmitTransaction(
-            msg.sender,
             txIndex,
             _to,
             _value,
             _data,
-            tokenAddress,
-            amountOrTokenId,
-            isERC721
+            tokenAddress, //!!! whats this when the proposal is just about sending ETH without ERC20 or ERC721?
+            amountOrTokenId, //!!! whats this when the proposal is just about sending ETH without ERC20 or ERC721?
+            isERC721, //!!! make this en enum being clear about being Either ERC721 or ERC20 or neither
+            msg.sender
         );
     }
 
@@ -235,6 +239,8 @@ contract MultiSigWallet is ReentrancyGuard {
             amountOrTokenId,
             isERC721
         );
+
+        //!!! Should the transaction[txIndex] be deleted after the execution? just to keep everything clean you know since we delete every once in a while when we add or remove owners or somebody actively revokes their proposal ... ?
     }
 
     /**
@@ -326,6 +332,7 @@ contract MultiSigWallet is ReentrancyGuard {
         updateConfirmationsRequired();
 
         emit OwnerRemoved(_owner);
+        //!!! doublecheck that if a multisigowner gets deleted that the numconfirmation gets reduced in case otherwise there would be more confirmations required than multisigowners exist.
     }
 
     /**
@@ -370,6 +377,28 @@ contract MultiSigWallet is ReentrancyGuard {
     function clearPendingTransactions() internal {
         delete transactions;
         emit PendingTransactionsCleared();
+    }
+
+    function clearMyPendingTransaction(
+        uint _txIndex
+    ) public txExists(_txIndex) notExecuted(_txIndex) {
+        require(
+            transactions[_txIndex].owner == msg.sender,
+            "Only the owner can clear their transaction"
+        );
+
+        // Revoke all confirmations for the transaction
+        for (uint256 i = 0; i < owners.length; i++) {
+            address owner = owners[i];
+            if (isConfirmed[_txIndex][owner]) {
+                isConfirmed[_txIndex][owner] = false;
+            }
+        }
+
+        // Delete the transaction
+        delete transactions[_txIndex];
+
+        emit MyPendingTransactionCleared(_txIndex);
     }
 
     function decodeTransactionData(
