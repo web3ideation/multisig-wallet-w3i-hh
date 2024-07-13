@@ -275,7 +275,7 @@ contract MultiSigWallet is ReentrancyGuard {
     function addOwnerInternal(
         address _newOwner
     )
-        public
+        internal
         onlyMultiSigOwner
         txExists(transactions.length - 1)
         notExecuted(transactions.length - 1)
@@ -310,7 +310,7 @@ contract MultiSigWallet is ReentrancyGuard {
     function removeOwnerInternal(
         address _owner
     )
-        public
+        internal
         onlyMultiSigOwner
         txExists(transactions.length - 1)
         notExecuted(transactions.length - 1)
