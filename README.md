@@ -44,3 +44,34 @@ natspec nochmal machen lassen weil ich ja sachen geändert hatte
  check if the 2/3 and 50%+1 really works for 2 3 4 5 6 7 8 99 999 owners 
 
  Reentrancy Guard: Use OpenZeppelin's ReentrancyGuard modifier for public and external functions to protect against reentrancy attacks. You already inherit from ReentrancyGuard, so applying its modifier to susceptible functions is advisable.
+
+ Add that with submitting there will automatically the confirm function be called (is that necessary?)
+
+
+
+ Remix Notes:
+
+ 3 Owners:
+ 0 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4
+ 1 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2
+ 2 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db
+
+
+Abstimmung 1: Send 0.1 ETH to 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2 (Owner 2)
+Worked
+
+Abstimmung 2: Send 0.3 ETH to 0x14723A09ACff6D2A60DcdF7aA4AFf308FDDC160C (random third person)
+Worked
+
+Abstimmung 3: add owner 0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB
+❌--> Ok i can submit the addOwner but when the other two existing owners want to confirm i get a "Transaction failed"
+
+Abstimmung 4: remove owner 0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB
+
+Abstimmung 5: ERC20 verschicken lassen
+
+Abstimmung 6: ERC721 verschicken lassen
+
+How to use:
+to deploy do not send ETH with it but put all the owners in [] seperated with , 
+to submitTransaction write the value in WEI and if only ETH write 0x for data

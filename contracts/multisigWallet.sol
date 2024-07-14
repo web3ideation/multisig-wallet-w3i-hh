@@ -433,7 +433,7 @@ contract MultiSigWallet is ReentrancyGuard {
             }
             return (_to, tokenId, true);
         } else {
-            revert("Unknown transaction data");
+            return (address(0), 0, false);
         }
     }
 
