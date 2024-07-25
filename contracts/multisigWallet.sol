@@ -70,7 +70,7 @@ contract MultiSigWallet is ReentrancyGuard {
     event OwnerRemoved(address indexed owner);
 
     /// @notice Emitted when all pending transactions have been cleared.
-    event PendingTransactionsCleared();
+    event PendingTransactionsDeactivated();
 
     event MyPendingTransactionCleared(uint indexed txIndex);
 
@@ -93,7 +93,7 @@ contract MultiSigWallet is ReentrancyGuard {
         address to;
         uint256 value;
         bytes data;
-        bool executed;
+        bool isActive;
         uint256 numConfirmations;
         address owner;
     }
@@ -111,8 +111,8 @@ contract MultiSigWallet is ReentrancyGuard {
         _;
     }
 
-    modifier notExecuted(uint256 _txIndex) {
-        require(!transactions[_txIndex].executed, "Transaction already executed");
+    modifier isActive(uint256 _txIndex) {
+        require(transactions[_txIndex].isActive, "Transaction not active");
         _;
     }
 
@@ -167,7 +167,7 @@ contract MultiSigWallet is ReentrancyGuard {
                 to: _to,
                 value: _value,
                 data: _data,
-                executed: false,
+                isActive: true,
                 numConfirmations: 0,
                 owner: msg.sender //!!! is this fine or do i have to assign the msg.sender to a variable before the transaction.push?
             })
@@ -194,7 +194,7 @@ contract MultiSigWallet is ReentrancyGuard {
      */
     function confirmTransaction(
         uint256 _txIndex
-    ) public onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) notConfirmed(_txIndex) {
+    ) public onlyMultiSigOwner txExists(_txIndex) isActive(_txIndex) notConfirmed(_txIndex) {
         Transaction storage transaction = transactions[_txIndex];
         transaction.numConfirmations += 1;
         isConfirmed[_txIndex][msg.sender] = true;
@@ -218,7 +218,7 @@ contract MultiSigWallet is ReentrancyGuard {
      */
     function executeTransaction(
         uint256 _txIndex
-    ) internal onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) nonReentrant {
+    ) internal onlyMultiSigOwner txExists(_txIndex) isActive(_txIndex) nonReentrant {
         Transaction storage transaction = transactions[_txIndex];
 
         uint256 numConfirmationsRequired = (transaction.transactionType ==
@@ -232,8 +232,6 @@ contract MultiSigWallet is ReentrancyGuard {
             "Not enough Confirmations"
         );
 
-        transaction.executed = true;
-
         if (transaction.transactionType == TransactionType.AddOwner) {
             addOwnerInternal(transaction.to);
         } else if (transaction.transactionType == TransactionType.RemoveOwner) {
@@ -242,6 +240,8 @@ contract MultiSigWallet is ReentrancyGuard {
             (bool success, ) = transaction.to.call{value: transaction.value}(transaction.data);
             require(success, "Transaction failed"); // if the transaction failed, will the transaction.executed still be true?
         }
+
+        transaction.isActive = false;
 
         // Decode the data to extract the token address and amount / tokenId
         (address tokenAddress, uint256 amountOrTokenId) = decodeTransactionData(transaction.data);
@@ -266,7 +266,7 @@ contract MultiSigWallet is ReentrancyGuard {
      */
     function revokeConfirmation(
         uint256 _txIndex
-    ) public onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) {
+    ) public onlyMultiSigOwner txExists(_txIndex) isActive(_txIndex) {
         Transaction storage transaction = transactions[_txIndex];
         require(isConfirmed[_txIndex][msg.sender], "Transaction not confirmed");
 
@@ -299,13 +299,13 @@ contract MultiSigWallet is ReentrancyGuard {
         internal
         onlyMultiSigOwner
         txExists(transactions.length - 1)
-        notExecuted(transactions.length - 1)
+        isActive(transactions.length - 1)
     {
         require(_newOwner != address(0), "Invalid owner");
         require(!isOwner[_newOwner], "Owner already exists");
 
         // Clear pending transactions before adding the new owner
-        clearPendingTransactions();
+        deactivatePendingTransactions();
 
         isOwner[_newOwner] = true;
         owners.push(_newOwner);
@@ -333,12 +333,12 @@ contract MultiSigWallet is ReentrancyGuard {
         internal
         onlyMultiSigOwner
         txExists(transactions.length - 1)
-        notExecuted(transactions.length - 1)
+        isActive(transactions.length - 1)
     {
         require(isOwner[_owner], "Not an owner");
 
         // Clear pending transactions before adding the new owner
-        clearPendingTransactions();
+        deactivatePendingTransactions();
 
         isOwner[_owner] = false;
         for (uint256 i = 0; i < owners.length; i++) {
@@ -394,14 +394,18 @@ contract MultiSigWallet is ReentrancyGuard {
         submitTransaction(TransactionType.ERC721, _tokenAddress, 0, data);
     }
 
-    function clearPendingTransactions() internal {
-        delete transactions;
-        emit PendingTransactionsCleared();
+    function deactivatePendingTransactions() internal {
+        for (uint256 i = 0; i < transactions.length; i++) {
+            if (transactions[i].isActive) {
+                transactions[i].isActive = false;
+            }
+        }
+        emit PendingTransactionsDeactivated();
     }
 
     function clearMyPendingTransaction(
         uint _txIndex
-    ) public txExists(_txIndex) notExecuted(_txIndex) {
+    ) public txExists(_txIndex) isActive(_txIndex) {
         require(
             transactions[_txIndex].owner == msg.sender,
             "Only the owner can clear their transaction"
