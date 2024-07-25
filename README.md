@@ -29,6 +29,8 @@ Next steps:
 
  have two different numconfirmationrequired for normal transactions and adding/deleting users (does that make sense?) - leichte entscheidungen 50+1 und schwere 2/3 mehrheit ✅
 
+ ❌ bei 2 ownern reicht die confirmation von einem um tokens zu transferieren also 50% +1 funktioniert nicht richtig
+
  enhance the event information as explained by cGPT above
 
  muss ich noch irgendwelche getter und setter funktionen schreiben?
@@ -75,3 +77,10 @@ Abstimmung 6: ERC721 verschicken lassen
 How to use:
 to deploy do not send ETH with it but put all the owners in [] seperated with , 
 to submitTransaction write the value in WEI and if only ETH write 0x for data
+
+
+
+
+
+ok jetzt mal das ganze in hardhat testen ob ich da mit dem simplified contract das gleiche problem habe oder ob es an remix liegt. wenn nicht dann schauen ob die erc721 und erc20 executes gehen. wenn ja dann einfach für die add und remove owner mit highlevel calls umprogrammieren - einfach erstmal wieder den hardhat node zum laufen bringen und dann statt mit der console mit scripten mit dem contract interargieren. vlt kann ich später mal  hardhat durch foundry ablösen - vielleicht auch einfach mal mit cGPT komplett hardhat neu einrichten, also checken ob die version passt und dann neue projekt anlegen - remix sepolia funktioniert auch nicht, also wird hardhat wohl auch nicht funktionieren. das problem ist also im contract selbst. als nächstes schauen ob die erc721 und erc20 executes gehen. wenn ja dann einfach für die add und remove owner mit highlevel calls umprogrammieren
+-> Also erc20 funktioniert, es ist wohl nur das problem mit dem internen call. 
