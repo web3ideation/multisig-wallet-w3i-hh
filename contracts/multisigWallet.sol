@@ -27,14 +27,14 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @param data The data sent with the transaction.
     /// @param owner The address of the owner who submitted the transaction.
     event SubmitTransaction(
+        TransactionType indexed _transactionType,
         uint256 indexed txIndex,
         address indexed to,
         uint256 value,
         bytes data,
         address tokenAddress,
         uint256 amountOrTokenId,
-        bool isERC721,
-        address indexed owner
+        address owner
     );
 
     /// @notice Emitted when a transaction is confirmed.
@@ -51,14 +51,14 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @param owner The address of the owner who executed the transaction.
     /// @param txIndex The index of the executed transaction.
     event ExecuteTransaction(
-        address indexed owner,
+        TransactionType indexed _transactionType,
         uint256 indexed txIndex,
         address indexed to,
         uint256 value,
         bytes data,
         address tokenAddress,
         uint256 amountOrTokenId,
-        bool isERC721
+        address owner
     );
 
     /// @notice Emitted when an owner is added.
@@ -74,12 +74,22 @@ contract MultiSigWallet is ReentrancyGuard {
 
     event MyPendingTransactionCleared(uint indexed txIndex);
 
+    enum TransactionType {
+        ETH,
+        ERC20,
+        ERC721,
+        AddOwner,
+        RemoveOwner,
+        Other
+    }
+
     address[] public owners;
     mapping(address => bool) public isOwner;
     uint256 public numImportantDecisionConfirmations;
     uint256 public numNormalDecisionConfirmations;
 
     struct Transaction {
+        TransactionType transactionType;
         address to;
         uint256 value;
         bytes data;
@@ -144,6 +154,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _data The data to send with the transaction.
      */
     function submitTransaction(
+        TransactionType _transactionType,
         address _to,
         uint256 _value,
         bytes memory _data
@@ -152,6 +163,7 @@ contract MultiSigWallet is ReentrancyGuard {
 
         transactions.push(
             Transaction({
+                transactionType: _transactionType,
                 to: _to,
                 value: _value,
                 data: _data,
@@ -162,18 +174,16 @@ contract MultiSigWallet is ReentrancyGuard {
         );
 
         // Decode the data to extract the token address and amount / tokenId
-        (address tokenAddress, uint256 amountOrTokenId, bool isERC721) = decodeTransactionData(
-            _data
-        );
+        (address tokenAddress, uint256 amountOrTokenId) = decodeTransactionData(_data);
 
         emit SubmitTransaction(
+            _transactionType,
             txIndex,
             _to,
             _value,
             _data,
             tokenAddress, //!!! whats this when the proposal is just about sending ETH without ERC20 or ERC721?
             amountOrTokenId, //!!! whats this when the proposal is just about sending ETH without ERC20 or ERC721?
-            isERC721, //!!! make this en enum being clear about being Either ERC721 or ERC20 or neither
             msg.sender
         );
     }
@@ -191,11 +201,12 @@ contract MultiSigWallet is ReentrancyGuard {
 
         emit ConfirmTransaction(msg.sender, _txIndex);
 
-        uint256 numConfirmationsRequired = isImportantTransaction(transaction.data)
+        uint256 numConfirmationsRequired = (transaction.transactionType ==
+            TransactionType.AddOwner ||
+            transaction.transactionType == TransactionType.RemoveOwner)
             ? numImportantDecisionConfirmations
             : numNormalDecisionConfirmations;
 
-        // hier muss die logik rein, dass wenn die Transaction owners hinzufügt oder löscht - die andere numConfrimations genommen wird.
         if (transaction.numConfirmations >= numConfirmationsRequired) {
             executeTransaction(_txIndex);
         }
@@ -210,34 +221,40 @@ contract MultiSigWallet is ReentrancyGuard {
     ) internal onlyMultiSigOwner txExists(_txIndex) notExecuted(_txIndex) nonReentrant {
         Transaction storage transaction = transactions[_txIndex];
 
-        uint256 numConfirmationsRequired = isImportantTransaction(transaction.data)
+        uint256 numConfirmationsRequired = (transaction.transactionType ==
+            TransactionType.AddOwner ||
+            transaction.transactionType == TransactionType.RemoveOwner)
             ? numImportantDecisionConfirmations
             : numNormalDecisionConfirmations;
 
         require(
             transaction.numConfirmations >= numConfirmationsRequired,
-            "Cannot execute transaction"
+            "Not enough Confirmations"
         );
 
         transaction.executed = true;
 
-        (bool success, ) = transaction.to.call{value: transaction.value}(transaction.data);
-        require(success, "Transaction failed");
+        if (transaction.transactionType == TransactionType.AddOwner) {
+            addOwnerInternal(transaction.to);
+        } else if (transaction.transactionType == TransactionType.RemoveOwner) {
+            removeOwnerInternal(transaction.to);
+        } else {
+            (bool success, ) = transaction.to.call{value: transaction.value}(transaction.data);
+            require(success, "Transaction failed"); // if the transaction failed, will the transaction.executed still be true?
+        }
 
         // Decode the data to extract the token address and amount / tokenId
-        (address tokenAddress, uint256 amountOrTokenId, bool isERC721) = decodeTransactionData(
-            transaction.data
-        );
+        (address tokenAddress, uint256 amountOrTokenId) = decodeTransactionData(transaction.data);
 
         emit ExecuteTransaction(
-            msg.sender,
+            transaction.transactionType,
             _txIndex,
             transaction.to,
             transaction.value,
             transaction.data,
             tokenAddress,
             amountOrTokenId,
-            isERC721
+            msg.sender
         );
 
         //!!! Should the transaction[txIndex] be deleted after the execution? just to keep everything clean you know since we delete every once in a while when we add or remove owners or somebody actively revokes their proposal ... ?
@@ -259,13 +276,17 @@ contract MultiSigWallet is ReentrancyGuard {
         emit RevokeConfirmation(msg.sender, _txIndex);
     }
 
+    function sendETH(address _to, uint256 _amount) public onlyMultiSigOwner {
+        submitTransaction(TransactionType.ETH, _to, _amount, "");
+    }
+
     /**
      * @dev Adds a new multisig owner. This function needs to be confirmed by the required number of owners.
      * @param _newOwner The address of the new owner.
      */
+
     function addOwner(address _newOwner) public onlyMultiSigOwner {
-        bytes memory data = abi.encodeWithSignature("addOwnerInternal(address)", _newOwner);
-        submitTransaction(address(this), 0, data);
+        submitTransaction(TransactionType.AddOwner, _newOwner, 0, "");
     }
 
     /**
@@ -299,8 +320,7 @@ contract MultiSigWallet is ReentrancyGuard {
      * @param _owner The address of the owner to remove.
      */
     function removeOwner(address _owner) public onlyMultiSigOwner {
-        bytes memory data = abi.encodeWithSignature("removeOwnerInternal(address)", _owner);
-        submitTransaction(address(this), 0, data);
+        submitTransaction(TransactionType.RemoveOwner, _owner, 0, "");
     }
 
     /**
@@ -351,7 +371,7 @@ contract MultiSigWallet is ReentrancyGuard {
             _to,
             _amountOrTokenId
         );
-        submitTransaction(_tokenAddress, 0, data);
+        submitTransaction(TransactionType.ERC20, _tokenAddress, 0, data);
     }
 
     /**
@@ -371,7 +391,7 @@ contract MultiSigWallet is ReentrancyGuard {
             _to,
             _tokenId
         );
-        submitTransaction(_tokenAddress, 0, data);
+        submitTransaction(TransactionType.ERC721, _tokenAddress, 0, data);
     }
 
     function clearPendingTransactions() internal {
@@ -403,7 +423,7 @@ contract MultiSigWallet is ReentrancyGuard {
 
     function decodeTransactionData(
         bytes memory data
-    ) internal pure returns (address tokenAddress, uint256 amountOrTokenId, bool isERC721) {
+    ) internal pure returns (address tokenAddress, uint256 amountOrTokenId) {
         bytes4 erc20Selector = bytes4(keccak256("transfer(address,uint256)"));
         bytes4 erc721Selector = bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
 
@@ -411,7 +431,7 @@ contract MultiSigWallet is ReentrancyGuard {
         assembly {
             selector := mload(add(data, 32))
         }
-
+        // since we don't need the isERC721 anymore because we have the enum, check what is exactly necessary in this function for extracting the info of token address and amount/id
         if (selector == erc20Selector) {
             require(data.length == 68, "Invalid data length for ERC20 transfer");
             address _to;
@@ -420,7 +440,7 @@ contract MultiSigWallet is ReentrancyGuard {
                 _to := mload(add(data, 36))
                 _amountOrTokenId := mload(add(data, 68))
             }
-            return (_to, _amountOrTokenId, false);
+            return (_to, _amountOrTokenId);
         } else if (selector == erc721Selector) {
             require(data.length == 100, "Invalid data length for ERC721 transfer");
             address _from;
@@ -431,22 +451,10 @@ contract MultiSigWallet is ReentrancyGuard {
                 _to := mload(add(data, 68))
                 tokenId := mload(add(data, 100))
             }
-            return (_to, tokenId, true);
+            return (_to, tokenId);
         } else {
-            return (address(0), 0, false);
+            return (address(0), 0);
         }
-    }
-
-    function isImportantTransaction(bytes memory _data) internal pure returns (bool) {
-        bytes4 addOwnerSelector = bytes4(keccak256("addOwnerInternal(address)"));
-        bytes4 removeOwnerSelector = bytes4(keccak256("removeOwnerInternal(address)"));
-
-        bytes4 selector;
-        assembly {
-            selector := mload(add(_data, 32))
-        }
-
-        return (selector == addOwnerSelector || selector == removeOwnerSelector);
     }
 
     function updateConfirmationsRequired() internal {
