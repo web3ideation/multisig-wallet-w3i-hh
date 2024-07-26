@@ -465,8 +465,13 @@ contract MultiSigWallet is ReentrancyGuard {
         uint256 ownerCount = owners.length;
         // numNormalDecisionConfirmations = (ownerCount + 1) / 2; // !!! these don't really work so i am using a simple approach for now
         // numImportantDecisionConfirmations = (2 * ownerCount + 2) / 3; // !!! these don't really work so i am using a simple approach for now
-        numNormalDecisionConfirmations = ownerCount - 1;
-        numImportantDecisionConfirmations = ownerCount - 1;
+        if (ownerCount > 2) {
+            numNormalDecisionConfirmations = ownerCount - 1;
+            numImportantDecisionConfirmations = ownerCount - 1;
+        } else {
+            numNormalDecisionConfirmations = ownerCount;
+            numImportantDecisionConfirmations = ownerCount;
+        }
         require(
             ownerCount >= numNormalDecisionConfirmations,
             "numNormalDecisionConfirmations higher then owners"
