@@ -463,8 +463,10 @@ contract MultiSigWallet is ReentrancyGuard {
 
     function updateConfirmationsRequired() internal {
         uint256 ownerCount = owners.length;
-        numNormalDecisionConfirmations = (ownerCount / 2) + 1; // !!! test these
-        numImportantDecisionConfirmations = (2 * ownerCount + 2) / 3; // !!! test these
+        // numNormalDecisionConfirmations = (ownerCount + 1) / 2; // !!! these don't really work so i am using a simple approach for now
+        // numImportantDecisionConfirmations = (2 * ownerCount + 2) / 3; // !!! these don't really work so i am using a simple approach for now
+        numNormalDecisionConfirmations = ownerCount - 1;
+        numImportantDecisionConfirmations = ownerCount - 1;
         require(
             ownerCount >= numNormalDecisionConfirmations,
             "numNormalDecisionConfirmations higher then owners"
@@ -473,5 +475,14 @@ contract MultiSigWallet is ReentrancyGuard {
             ownerCount >= numImportantDecisionConfirmations,
             "numImportantDecisionConfirmations higher then owners"
         );
+    }
+
+    function getOwnerCount() public view returns (uint256) {
+        uint256 ownerCount = owners.length;
+        return ownerCount;
+    }
+
+    function getOwners() public view returns (address[] memory) {
+        return owners;
     }
 }
