@@ -72,7 +72,7 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @notice Emitted when all pending transactions have been cleared.
     event PendingTransactionsDeactivated();
 
-    event MyPendingTransactionCleared(uint indexed txIndex);
+    event DeactivatedMyPendingTransaction(uint indexed txIndex, uint indexed owner);
 
     enum TransactionType {
         ETH,
@@ -403,7 +403,7 @@ contract MultiSigWallet is ReentrancyGuard {
         emit PendingTransactionsDeactivated();
     }
 
-    function clearMyPendingTransaction(
+    function deactivateMyPendingTransaction(
         uint _txIndex
     ) public txExists(_txIndex) isActive(_txIndex) {
         require(
@@ -411,18 +411,10 @@ contract MultiSigWallet is ReentrancyGuard {
             "Only the owner can clear their transaction"
         );
 
-        // Revoke all confirmations for the transaction
-        for (uint256 i = 0; i < owners.length; i++) {
-            address owner = owners[i];
-            if (isConfirmed[_txIndex][owner]) {
-                isConfirmed[_txIndex][owner] = false;
-            }
-        }
+        // Deactivate Transaction
+        transactions[_txIndex].isActive = false;
 
-        // Delete the transaction
-        delete transactions[_txIndex];
-
-        emit MyPendingTransactionCleared(_txIndex);
+        emit DeactivatedMyPendingTransaction(_txIndex, msg.sender);
     }
 
     function decodeTransactionData(
