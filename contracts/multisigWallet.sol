@@ -72,7 +72,7 @@ contract MultiSigWallet is ReentrancyGuard {
     /// @notice Emitted when all pending transactions have been cleared.
     event PendingTransactionsDeactivated();
 
-    event DeactivatedMyPendingTransaction(uint indexed txIndex, uint indexed owner);
+    event DeactivatedMyPendingTransaction(uint indexed txIndex, address indexed owner);
 
     enum TransactionType {
         ETH,
