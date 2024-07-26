@@ -8,12 +8,13 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 /**
  * @title MultiSigWallet
  * @dev A multisig wallet contract that requires multiple confirmations for transactions, including managing owners.
  */
-contract MultiSigWallet is ReentrancyGuard {
+contract MultiSigWallet is ReentrancyGuard, IERC721Receiver {
     /// @notice Emitted when a deposit is made.
     /// @param sender The address that sent the deposit.
     /// @param amountOrTokenId The amount of the deposit.
@@ -472,6 +473,16 @@ contract MultiSigWallet is ReentrancyGuard {
             ownerCount >= numImportantDecisionConfirmations,
             "numImportantDecisionConfirmations higher then owners"
         );
+    }
+
+    // IERC721Receiver implementation
+    function onERC721Received(
+        address /*operator*/,
+        address /*from*/,
+        uint256 /*tokenId*/,
+        bytes calldata /*data*/
+    ) external pure override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
     function getOwnerCount() public view returns (uint256) {
