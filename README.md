@@ -85,5 +85,10 @@ to submitTransaction write the value in WEI and if only ETH write 0x for data
 ok jetzt mal das ganze in hardhat testen ob ich da mit dem simplified contract das gleiche problem habe oder ob es an remix liegt. wenn nicht dann schauen ob die erc721 und erc20 executes gehen. wenn ja dann einfach für die add und remove owner mit highlevel calls umprogrammieren - einfach erstmal wieder den hardhat node zum laufen bringen und dann statt mit der console mit scripten mit dem contract interargieren. vlt kann ich später mal  hardhat durch foundry ablösen - vielleicht auch einfach mal mit cGPT komplett hardhat neu einrichten, also checken ob die version passt und dann neue projekt anlegen - remix sepolia funktioniert auch nicht, also wird hardhat wohl auch nicht funktionieren. das problem ist also im contract selbst. als nächstes schauen ob die erc721 und erc20 executes gehen. wenn ja dann einfach für die add und remove owner mit highlevel calls umprogrammieren
 -> Also erc20 funktioniert, es ist wohl nur das problem mit dem internen call. 
 -> hab jetzt refactored um mit transactionType alles zu coordinieren. jetzt nochmal auf remix testen.
+
+also implement the safeERC20 thing from open zepplin ✅
+
 -> jetzt noch erc721 und erc20 testen dann hab ich eigentlich alles vorgetestet und kann an die richtigen tests mit hardhat oder foundry gehen
-also implement the safeERC20 thing from open zepplin
+-----> continue here ❌ when testing the safeTransferFrom() function, i get an error similarly to before when i couldnt call the internal function addOwnerInternal. add a callback function with a console.log to verify if its the same situation. more details see cGPT
+
+get the 2/3 consensus to work (50%+1 already seem to have worked correctly, just get it from the commit before the simplify commit)
