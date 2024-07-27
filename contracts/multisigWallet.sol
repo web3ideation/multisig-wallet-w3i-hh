@@ -7,6 +7,7 @@ pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
@@ -74,6 +75,8 @@ contract MultiSigWallet is ReentrancyGuard, IERC721Receiver {
     event PendingTransactionsDeactivated();
 
     event DeactivatedMyPendingTransaction(uint indexed txIndex, address indexed owner);
+
+    using SafeERC20 for IERC20;
 
     enum TransactionType {
         ETH,
@@ -356,23 +359,25 @@ contract MultiSigWallet is ReentrancyGuard, IERC721Receiver {
         //!!! doublecheck that if a multisigowner gets deleted that the numconfirmation gets reduced in case otherwise there would be more confirmations required than multisigowners exist.
     }
 
-    /**
-     * @dev Submits a transaction to transfer ERC20 tokens.
-     * @param _tokenAddress The address of the ERC20 token contract.
-     * @param _to The address to send the tokens to.
-     * @param _amountOrTokenId The amount of tokens to send.
-     */
-    function transferERC20(
-        address _tokenAddress,
-        address _to,
-        uint256 _amountOrTokenId
+    // Safe ERC20 transfer function
+    function safeTransferERC20(IERC20 token, address to, uint256 amount) public onlyMultiSigOwner {
+        // Encode the transfer data
+        bytes memory data = abi.encodeWithSelector(token.transfer.selector, to, amount);
+        // Submit the transaction for confirmation
+        submitTransaction(TransactionType.ERC20, address(token), 0, data);
+    }
+
+    // Safe ERC20 transferFrom function
+    function safeTransferFromERC20(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 amount
     ) public onlyMultiSigOwner {
-        bytes memory data = abi.encodeWithSignature(
-            "transfer(address,uint256)",
-            _to,
-            _amountOrTokenId
-        );
-        submitTransaction(TransactionType.ERC20, _tokenAddress, 0, data);
+        // Encode the transferFrom data
+        bytes memory data = abi.encodeWithSelector(token.transferFrom.selector, from, to, amount);
+        // Submit the transaction for confirmation
+        submitTransaction(TransactionType.ERC20, address(token), 0, data);
     }
 
     /**
